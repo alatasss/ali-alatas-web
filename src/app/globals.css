@@ -25,6 +25,16 @@
     cursor: pointer;
   }
 
+  /* Custom eye cursor: hide the native pointer when active */
+  html.eye-cursor-on,
+  html.eye-cursor-on a,
+  html.eye-cursor-on button,
+  html.eye-cursor-on [role="button"],
+  html.eye-cursor-on input,
+  html.eye-cursor-on textarea {
+    cursor: none;
+  }
+
   input,
   textarea,
   [contenteditable="true"] {

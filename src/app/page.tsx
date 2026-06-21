@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState, useEffect } from "react";
-import { motion, AnimatePresence, useScroll, useTransform, useInView, useMotionValue } from "framer-motion";
+import { motion, AnimatePresence, useScroll, useTransform, useInView, useMotionValue, useSpring } from "framer-motion";
 
 // Brand colors
 const C = {
@@ -17,6 +17,94 @@ const C = {
 // Public SVG asset paths (decorative)
 const ICONS = ["/1.svg", "/2.svg", "/3.svg", "/4.svg", "/5.svg", "/6.svg", "/7.svg", "/8.svg", "/9.svg", "/10.svg"];
 const PROFILE = "/profile.svg";
+
+/* =========================================================
+   EYE CURSOR — a medium eye icon that follows the mouse,
+   the pupil glances toward the movement direction
+========================================================= */
+function EyeCursor() {
+  const x = useMotionValue(-100);
+  const y = useMotionValue(-100);
+  const sx = useSpring(x, { stiffness: 500, damping: 40, mass: 0.4 });
+  const sy = useSpring(y, { stiffness: 500, damping: 40, mass: 0.4 });
+  const [enabled, setEnabled] = useState(false);
+  const [pupil, setPupil] = useState({ dx: 0, dy: 0 });
+  const [blink, setBlink] = useState(false);
+  const last = useRef({ x: 0, y: 0, t: 0 });
+
+  useEffect(() => {
+    // Only on devices with a real pointer (skip touch screens)
+    if (!window.matchMedia("(pointer: fine)").matches) return;
+    setEnabled(true);
+    document.documentElement.classList.add("eye-cursor-on");
+
+    const onMove = (e: MouseEvent) => {
+      x.set(e.clientX);
+      y.set(e.clientY);
+      // glance toward movement direction
+      const dx = e.clientX - last.current.x;
+      const dy = e.clientY - last.current.y;
+      const len = Math.hypot(dx, dy) || 1;
+      const max = 3.2;
+      setPupil({ dx: (dx / len) * max, dy: (dy / len) * max });
+      last.current = { x: e.clientX, y: e.clientY, t: Date.now() };
+    };
+    window.addEventListener("mousemove", onMove);
+
+    // occasional blink
+    const blinkLoop = setInterval(() => {
+      setBlink(true);
+      setTimeout(() => setBlink(false), 150);
+    }, 4200);
+
+    return () => {
+      window.removeEventListener("mousemove", onMove);
+      clearInterval(blinkLoop);
+      document.documentElement.classList.remove("eye-cursor-on");
+    };
+  }, [x, y]);
+
+  if (!enabled) return null;
+
+  return (
+    <motion.div
+      aria-hidden
+      style={{ x: sx, y: sy }}
+      className="pointer-events-none fixed top-0 left-0 z-[9999]"
+    >
+      <div style={{ transform: "translate(-50%, -50%)" }}>
+        <svg width="46" height="30" viewBox="0 0 46 30" fill="none">
+          {/* eye white almond */}
+          <path
+            d="M2 15 C 10 3, 36 3, 44 15 C 36 27, 10 27, 2 15 Z"
+            fill="#FFFFFF"
+            stroke="#1a1a1a"
+            strokeWidth="2.5"
+            strokeLinejoin="round"
+          />
+          {/* iris + pupil glancing toward movement */}
+          <g transform={`translate(${pupil.dx} ${pupil.dy})`}>
+            <circle cx="23" cy="15" r="8" fill="#0395FF" stroke="#1a1a1a" strokeWidth="2" />
+            <circle cx="23" cy="15" r="3.4" fill="#1a1a1a" />
+            <circle cx="20.5" cy="12.5" r="1.4" fill="#FFFFFF" />
+          </g>
+          {/* eyelid for blink */}
+          <motion.path
+            d="M2 15 C 10 3, 36 3, 44 15 C 36 27, 10 27, 2 15 Z"
+            fill="#FF78E5"
+            stroke="#1a1a1a"
+            strokeWidth="2.5"
+            strokeLinejoin="round"
+            initial={{ scaleY: 0 }}
+            animate={{ scaleY: blink ? 1 : 0 }}
+            transition={{ duration: 0.08 }}
+            style={{ originY: "15px", transformBox: "fill-box" }}
+          />
+        </svg>
+      </div>
+    </motion.div>
+  );
+}
 
 /* =========================================================
    BOUNCING PROFILE (uses 11.svg)
@@ -888,6 +976,7 @@ export default function Home() {
 
   return (
     <div className="relative" style={{ backgroundColor: C.bg }}>
+      <EyeCursor />
       <BouncingProfile />
 
       {/* ============ HERO / PREFACE ============ */}
