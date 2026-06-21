@@ -327,6 +327,8 @@ const Decor = ({
   dur,
   delay = 0,
   spin = true,
+  mobileFactor = 0.45,
+  mobileOpacity = 0.28,
 }: {
   src: string;
   x: string;
@@ -335,22 +337,40 @@ const Decor = ({
   dur: number;
   delay?: number;
   spin?: boolean;
-}) => (
-  <motion.img
-    src={src}
-    alt=""
-    aria-hidden
-    draggable={false}
-    className="absolute pointer-events-none select-none"
-    style={{ left: x, top: y, width: size, height: size }}
-    animate={{
-      y: [0, -22, 0],
-      rotate: spin ? [0, 360] : [-8, 8, -8],
-      scale: [1, 1.08, 1],
-    }}
-    transition={{ duration: dur, repeat: Infinity, ease: "easeInOut", delay }}
-  />
-);
+  mobileFactor?: number;
+  mobileOpacity?: number;
+}) => {
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const calc = () => setIsMobile(window.innerWidth < 640);
+    calc();
+    window.addEventListener("resize", calc);
+    return () => window.removeEventListener("resize", calc);
+  }, []);
+  const renderedSize = isMobile ? Math.round(size * mobileFactor) : size;
+  return (
+    <motion.img
+      src={src}
+      alt=""
+      aria-hidden
+      draggable={false}
+      className="absolute pointer-events-none select-none"
+      style={{
+        left: x,
+        top: y,
+        width: renderedSize,
+        height: renderedSize,
+        opacity: isMobile ? mobileOpacity : 1,
+      }}
+      animate={{
+        y: [0, -22, 0],
+        rotate: spin ? [0, 360] : [-8, 8, -8],
+        scale: [1, 1.08, 1],
+      }}
+      transition={{ duration: dur, repeat: Infinity, ease: "easeInOut", delay }}
+    />
+  );
+};
 
 // A scattered field of the public SVGs — varied sizes (XL / L / M / S), non-uniform
 const ScatteredDecor = ({ offset = 0 }: { offset?: number }) => {
@@ -884,7 +904,7 @@ export default function Home() {
             <h1 className="text-[clamp(2.6rem,9vw,6.5rem)] font-black leading-[0.95] tracking-tighter mb-3">
               <span className="block" style={{ color: C.ink }}>In Pursuit</span>
               <span className="block">
-                <span style={{ color: "#FFD400" }}>of</span> <span style={{ color: "#05A552" }}>Polymathy</span>
+                <span className="inline-block px-2 sm:px-3 rounded-md leading-none align-baseline" style={{ backgroundColor: "#FFD400", color: C.ink }}>of</span> <span style={{ color: "#05A552" }}>Polymathy</span>
               </span>
             </h1>
           </Reveal>
