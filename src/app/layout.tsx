@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import NoCopyGuard from "@/components/NoCopyGuard";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 export const metadata: Metadata = {
   title: "Ali Alatas - in Pursuit of Polymathy",
@@ -37,6 +38,7 @@ export default function RootLayout({
       <body className="bg-[#FFFBF3] text-[#1a1a1a] font-sf antialiased">
         <NoCopyGuard />
         <main>{children}</main>
+        <SpeedInsights />
       </body>
     </html>
   );
